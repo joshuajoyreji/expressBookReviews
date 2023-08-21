@@ -71,4 +71,61 @@ public_users.get('/review/:isbn',function (req, res) {
   res.send(books[isbn].review)
 });
 
+public_users.get('/', async function (req, res) {
+  try {
+    const response = await axios.get('https://example.com/api/books'); // Replace with the actual API endpoint
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching book list' });
+  }
+});
+
+public_users.get('/isbn/:isbn', function (req, res) {
+  const isbn = req.params.isbn;
+  function fetchBookDetails(isbn) {
+    return new Promise((resolve, reject) => {
+      const bookDetails = books[isbn];
+      if (bookDetails) {
+        resolve(bookDetails);
+      } else {
+        reject(new Error('Book not found'));
+      }
+    });
+  }
+  fetchBookDetails(isbn)
+    .then((book) => {
+      res.json(book);
+    })
+    .catch((error) => {
+      res.status(404).json({ message: error.message });
+    });
+});
+
+public_users.get('/author/:author', async function (req, res) {
+  const author = req.params.author;
+  try {
+    const response = await axios.get('http://your-api-url-for-fetching-books-by-author', {
+      params: { author },
+    });
+    const booksByAuthor = response.data;
+    res.json(booksByAuthor);
+  } catch (error) {
+    res.status(404).json({ message: 'Books not found for this author' });
+  }
+});
+
+public_users.get('/title/:title', async function (req, res) {
+  const title = req.params.title;
+  try {
+    const response = await axios.get('http://your-api-url-for-fetching-books-by-title', {
+      params: { title },
+    });
+    const booksByTitle = response.data;
+    res.json(booksByTitle);
+  } catch (error) {
+    res.status(404).json({ message: 'Books not found for this title' });
+  }
+});
+
 module.exports.general = public_users;

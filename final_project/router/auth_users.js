@@ -51,35 +51,28 @@ regd_users.post("/login", (req,res) => {
   }
 });
 
-// Add or Modify a book review
+// Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-  const reviewText = req.query.review; 
+  const review = req.query.review; 
   const isbn = req.params.isbn;
-  const user = req.session.authorization.username;
+  const username = req.session.authorization.username;
 
   if (!books[isbn]) {
     return res.status(404).json({ message: "Book not found" });
   }
 
   if (!books[isbn].reviews) {
-    books[isbn].reviews = [];
+    books[isbn].reviews = {};
   }
 
-  // Check if the user has already posted a review for this book
-  const existingReviewIndex = books[isbn].reviews.findIndex(
-    (review) => review.user === user
-  );
+  books[isbn].reviews[username] = review;
 
-  if (existingReviewIndex !== -1) {
-    // If the user has already posted a review, update it
-    books[isbn].reviews[existingReviewIndex].reviewText = reviewText;
-  } else {
-    // If the user hasn't posted a review yet, add a new one
-    books[isbn].reviews.push({ user, reviewText });
-  }
-
-  return res.status(200).json({ message: "Review added/modified successfully" });
+  return res.status(200).json({
+    message: "Review added or modified successfully",
+    book: books[isbn] // Send the updated book content in the response
+  });
 });
+
 
 
 
@@ -87,7 +80,6 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
 regd_users.delete("/auth/review/:isbn", (req, res) => {
   const isbn = req.params.isbn;
   const user = req.session.authorization.username;
-
   if (!books[isbn]) {
     return res.status(404).json({ message: "Book not found" });
   }
@@ -95,8 +87,8 @@ regd_users.delete("/auth/review/:isbn", (req, res) => {
   if (!books[isbn].reviews || books[isbn].reviews.length === 0) {
     return res.status(404).json({ message: "No reviews found for this book" });
   }
-  books[isbn].reviews = books[isbn].reviews.filter((review) => review.user !== user);
 
+  delete books[isbn].reviews[user];
   return res.status(200).json({ message: "Review deleted successfully" });
 });
 
